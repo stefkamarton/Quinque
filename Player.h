@@ -3,8 +3,16 @@
 #include <string>
 #include <iostream>
 class Player {
-
+	std::string Id = "";
+	int ParachutesNum = 0;
+	const int MAX_PARACHUTE = 15;
 public:
+	bool AddParachute();
+	Player(int null);
+	Player(std::string id);
+	std::string getId();
+	int getParachute();
+	int getRemainingParachute();
 
 };
 #endif // !PLAYER_H
