@@ -31,10 +31,17 @@ class Board {
 	std::vector<Player*> Players;
 
 	int CurrentPlayerId;
+	int CurrentStepNum=0;
 
+	int AssignedX;
+	int AssignedY;
+	bool Assigning;
+
+	int Rounds;
 
 	Tile** Tiles;
 	Board();
+	
 public:
 	Player* getCurrentPlayer();
 	void NextPlayer();
@@ -43,6 +50,14 @@ public:
 	void Moving(bool mini=false);
 	static Board* getInstance();
 	void printBoard(bool printCursor = false, bool mini=false);
+	void printSecondStep();
+	void printFirstStep();
+	int getCurrentStep();
+	bool Assign();
+	void Sizing();
+	int AllUsedTileNum();
+	void doSizing(int direction);
+
 
 };
 #endif // !BOARD_H

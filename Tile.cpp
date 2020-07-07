@@ -57,6 +57,16 @@ int Tile::getNumberOfParachute() {
 	}
 	return num;
 }
+void Tile::goNulled() {
+	for (int i = 0; i < Tile::FieldSize; i++)
+	{
+		for (int j = 0; j < Tile::FieldSize; j++)
+		{
+			//delete Tile::Fields[i][j];
+			Tile::Fields[i][j] = new Player(0);
+		}
+	}
+}
 void Tile::printLine(int linenum, bool justmini, int minicursor, bool secondgreen) {
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	CONSOLE_SCREEN_BUFFER_INFO begin;

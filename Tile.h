@@ -18,6 +18,7 @@ public:
 	void setFields(Player* cPlayer, int x, int y);
 	Player* getFields(int x, int y);
 	bool notEmpty();
+	void goNulled();
 	int getNumberOfParachute();
 
 private:
