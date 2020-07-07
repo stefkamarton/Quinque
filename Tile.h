@@ -21,8 +21,5 @@ public:
 	bool notEmpty();
 	void goNulled();
 	int getNumberOfParachute();
-
-private:
-
 };
 #endif // !TILE_H

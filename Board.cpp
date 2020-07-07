@@ -104,11 +104,6 @@ int Board::isConnectedCounter(int x, int y, bool main=false) {
 	}
 	int counter = 1;
 	Board::Connections[y][x] = true;
-	//Connections[y][x] = true;
-	/*std::cout << "X:" << x << std::endl;
-	std::cout << "Y:" << y << std::endl;
-	std::cout << "sad" << Board::Tiles[y][x + 1].notEmpty() << std::endl;
-	system("pause");*/
 
 	if (x+1 < Board::CurrentTileWidth && Board::Tiles[y][x+1].notEmpty() && Connections[y][x + 1] == false) {
 		counter += isConnectedCounter(x + 1,y);
@@ -405,7 +400,6 @@ void Board::printFirstStep() {
 	switch (_getch())
 	{
 	case Controls::M: //Marking
-		//Board::printBoard(true, true);
 		Board::Moving(true);
 		break;
 	case Controls::N:
@@ -782,7 +776,6 @@ bool Board::doAssign() {
 	Board::Tiles[CursorY][CursorX] = Board::Tiles[Board::AssignedY][Board::AssignedX];
 	Board::Tiles[Board::AssignedY][Board::AssignedX].goNulled();
 
-	//std::cout << "Kapcsolodó:" << isConnectedCounter(CursorX, CursorY, true) << std::endl;
 	if (Board::AllUsedTileNum() == isConnectedCounter(CursorX, CursorY, true)) {
 		Board::AssignedY = -1;
 		Board::AssignedX = -1;

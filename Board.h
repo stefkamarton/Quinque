@@ -63,11 +63,11 @@ class Board {
 	int NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step);
 	bool isWin(int x, int y, int minix, int miniy, std::string mark);
 	int isConnectedCounter(int x, int y, bool main);
+	int hadNeighbour(int x, int y);
 	bool Win;
 	std::string WinnerId;
 public:
 	Player* getCurrentPlayer();
-
 	static Board* getInstance();
 	void printBoard(bool printCursor = false, bool mini=false);
 	void printSecondStep();
@@ -75,7 +75,6 @@ public:
 	int getCurrentStep();
 	bool getWin();
 	std::string getWinnerId();
-	int hadNeighbour(int x, int y);
 	Player* getPlayerById(int id);
 	
 	

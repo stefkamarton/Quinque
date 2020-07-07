@@ -69,7 +69,6 @@ void Tile::goNulled() {
 	{
 		for (int j = 0; j < Tile::FieldSize; j++)
 		{
-			//delete Tile::Fields[i][j];
 			Tile::Fields[i][j] = new Player(0);
 		}
 	}
@@ -117,7 +116,6 @@ void Tile::printLine(int linenum, bool justmini, int minicursor, bool secondgree
 			SetConsoleTextAttribute(hConsole, bp.wAttributes);
 
 		}
-
 		if (justmini && i == minicursor) {
 			SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 		}
@@ -128,8 +126,6 @@ void Tile::printLine(int linenum, bool justmini, int minicursor, bool secondgree
 		}
 		
 		SetConsoleTextAttribute(hConsole, info.wAttributes);
-
 	}
-	
 	SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 }
