@@ -41,7 +41,12 @@ class Board {
 
 	Tile** Tiles;
 	Board();
-	
+	int NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark, int step);
+	int NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark, int step);
+	int NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::string mark, int step);
+	int NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step);
+
+	int VerticalCheck(int x, int y, int minix, int miniy);
 public:
 	Player* getCurrentPlayer();
 	void NextPlayer();
@@ -58,6 +63,7 @@ public:
 	int AllUsedTileNum();
 	void doSizing(int direction);
 
+	bool isWin(int x, int y, int minix, int miniy, std::string mark);
 
 };
 #endif // !BOARD_H

@@ -33,3 +33,16 @@ int main()
 	}
 
 }
+
+
+/*
+
+Jegyzet:
+
+
+- Mozgások 1,2,3,4 ejtõernyõsnél
+- Nyerési részek vizsgálata
+- Mozgásos kijelölés
+- Gépi játékos?
+
+*/

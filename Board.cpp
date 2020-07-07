@@ -437,6 +437,210 @@ void Board::Moving(bool ismarking) {
 		std::cout << "mY: " << MiniCursorY << std::endl;
 	}
 }
+bool Board::isWin(int x, int y, int minix, int miniy, std::string mark) {
+	int yNum = Board::NeighbourCheckY(x, y, minix, miniy, mark, 1) +Board::NeighbourCheckY(x, y, minix, miniy, mark, -1)-1;
+	int xNum = Board::NeighbourCheckX(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckX(x, y, minix, miniy, mark, -1)-1;
+	int diagNum= Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, -1) - 1;
+	int diagNumInv = Board::NeighbourCheckDiagonalInverse(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckDiagonalInverse(x, y, minix, miniy, mark, -1) - 1;
+
+	if (yNum >= 5 || xNum >= 5 || diagNum >= 5 || diagNumInv >= 5) {
+		return true;
+	}
+
+	//std::cout << "x:" << xNum << " y:" << yNum<<" diag:"<< diagNum<<" diagInv:" << diagNumInv <<std::endl;
+	//system("pause");
+	//std::cout << Board::isWin(CursorX, CursorY, MiniCursorX, MiniCursorY, Board::Players[Board::CurrentPlayerId]->getId(), -1) << std::endl;
+	return false;
+}
+int Board::NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::string mark, int step) {
+	int counter = 0;
+	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
+
+	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
+	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
+		counter += 1;
+		if (minix + step < 0) {
+			minix = 1;
+			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (minix + step > 1) {
+			minix = 0;
+			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			minix += step;
+		}
+
+		if (miniy + step < 0) {
+			miniy = 1;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (miniy + step > 1) {
+			miniy = 0;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			miniy += step;
+		}
+		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
+		counter += Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, step);
+		return counter;
+	}
+	else {
+		return counter;
+	}
+}
+int Board::NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step) {
+	int counter = 0;
+	std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
+
+	std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
+	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
+		counter += 1;
+		if (minix + step*-1 < 0) {
+			minix = 1;
+			if (x + step*-1 >= 0 && x + step*-1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step*-1;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (minix + step*-1 > 1) {
+			minix = 0;
+			if (x + step*-1 >= 0 && x + step*-1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step*-1;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			minix += step*-1;
+		}
+
+		if (miniy + step < 0) {
+			miniy = 1;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (miniy + step > 1) {
+			miniy = 0;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			miniy += step;
+		}
+		std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
+		counter += Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, step);
+		return counter;
+	}
+	else {
+		return counter;
+	}
+}
+int Board::NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark, int step) {
+	int counter = 0;
+	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
+
+	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
+	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
+		counter += 1;
+		if (minix + step < 0) {
+			minix = 1;
+			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum()>0) {
+				x += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (minix + step > 1) {
+			minix = 0;
+			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			minix += step;
+		}
+		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
+		counter += Board::NeighbourCheckX(x, y, minix, miniy, mark, step);
+		return counter;
+	}
+	else {
+		return counter;
+	}
+}
+int Board::NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark, int step) {
+	int counter = 0;
+	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
+
+	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
+	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
+		counter += 1;
+		if (miniy + step < 0) {
+			miniy = 1;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else if (miniy + step > 1) {
+			miniy = 0;
+			if (y + step >= 0 && y + step <= Board::CurrentTileHeight - 1 && Board::AllUsedTileNum() > 0) {
+				y += step;
+			}
+			else {
+				return counter;
+			}
+		}
+		else {
+			miniy += step;
+		}
+		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
+		counter += Board::NeighbourCheckY(x, y, minix, miniy, mark, step);
+		return counter;
+	}
+	else {
+		return counter;
+	}
+}
+
 bool Board::Assign() {
 	if (!Assigning) {
 		if (Board::Tiles[CursorY][CursorX].notEmpty()) {
