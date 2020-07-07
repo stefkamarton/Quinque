@@ -93,11 +93,17 @@ void Tile::printLine(int linenum, bool justmini, int minicursor, bool secondgree
 				if (bp.wAttributes == Colors::BlackOnCyan) {
 					SetConsoleTextAttribute(hConsole, Colors::RedOnCyan);
 				}
+				if (bp.wAttributes == Colors::RedOnGray) {
+					SetConsoleTextAttribute(hConsole, Colors::RedOnGray);
+				}
 			}
 			else if (Tile::Fields[linenum][i]->getId() == "O") {
 				SetConsoleTextAttribute(hConsole, Colors::BlueOnBlack);
 				if (bp.wAttributes == Colors::BlackOnCyan) {
 					SetConsoleTextAttribute(hConsole, Colors::BlueOnCyan);
+				}
+				if (bp.wAttributes == Colors::RedOnGray) {
+					SetConsoleTextAttribute(hConsole, Colors::BlueOnGray);
 				}
 			}
 			std::cout << " " << Tile::Fields[linenum][i]->getId() << " ";

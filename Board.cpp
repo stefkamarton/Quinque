@@ -28,6 +28,7 @@ Board::Board() {
 	Board::Assigning = false;
 
 	Board::Rounds = 1;
+	Board::Win = false;
 
 	/*Create Tiles*/
 	Board::CurrentTileWidth = MinTileWidth;
@@ -60,6 +61,8 @@ bool Board::AddPoint() {
 			(CursorX + 1 < Board::CurrentTileWidth - 1 && Board::Tiles[CursorY][CursorX + 1].notEmpty()) ||
 			Board::Tiles[CursorY][CursorX].notEmpty()) || Board::AllUsedTileNum() == 0) {
 		Board::Tiles[CursorY][CursorX].setFields(Board::Players[Board::CurrentPlayerId], MiniCursorX, MiniCursorY);
+		Board::Win = Board::isWin(CursorX, CursorY, MiniCursorX, MiniCursorY, Board::Players[Board::CurrentPlayerId]->getId());
+		system("pause");
 		Board::Sizing();
 		return true;
 	}
@@ -68,6 +71,9 @@ bool Board::AddPoint() {
 		system("pause");
 	}
 	return false;
+}
+bool Board::getWin() {
+	return Board::Win;
 }
 void Board::doSizing(int direction) {
 
@@ -99,12 +105,6 @@ void Board::doSizing(int direction) {
 		cheight -= 1;
 		break;
 	}
-	/*std::cout << hstart << std::endl;
-	std::cout << wstart << std::endl;
-	std::cout << cwidth << std::endl;
-	std::cout << cheight << std::endl;
-
-	system("pause");*/
 	for (int i = hstart; i < cheight; i++)
 	{
 		for (int j = wstart; j < cwidth; j++)
@@ -198,7 +198,47 @@ void Board::printBoard(bool printCursor, bool justmini) {
 					col - 1 >= 0 && Board::Tiles[row][col - 1].notEmpty() ||
 					col + 1 < Board::CurrentTileWidth && Board::Tiles[row][col + 1].notEmpty() || Board::Tiles[row][col].notEmpty()) {
 					secondgreen = true;
-					SetConsoleTextAttribute(hConsole, Colors::BlackOnGreen);
+					if (Board::AssignedX == -1 && Board::AssignedY == -1) {
+						SetConsoleTextAttribute(hConsole, Colors::BlackOnGreen);
+					}
+				}
+				if (Board::AssignedX != -1 && Board::AssignedY != -1) {
+					switch (Board::Tiles[Board::AssignedY][Board::AssignedX].getNumberOfParachute())
+					{
+					case 1:
+						if (((abs(col - Board::AssignedX) == 1 && abs(row - Board::AssignedY) == 0) ||
+							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) == 1)) && Board::hadNeighbour(col,row)) {
+							if (!Board::Tiles[row][col].notEmpty()) {
+								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+							}
+						}
+						break;
+					case 2:
+						if (((abs(col - Board::AssignedX) > 0 && abs(row - Board::AssignedY) == 0) ||
+							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) > 0)) && Board::hadNeighbour(col, row)) {
+							if (!Board::Tiles[row][col].notEmpty()) {
+								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+							}
+						}
+						break;
+					case 3:
+						if ((abs(col - Board::AssignedX) == abs(row - Board::AssignedY)) && Board::hadNeighbour(col, row)) {
+							if (!Board::Tiles[row][col].notEmpty()) {
+								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+							}
+							SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+						}
+						break;
+					case 4:
+						if (((abs(col - Board::AssignedX) > 0 && abs(row - Board::AssignedY) == 0) ||
+							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) > 0) ||
+							(abs(col - Board::AssignedX) == abs(row - Board::AssignedY))) && Board::hadNeighbour(col, row)) {
+							if (!Board::Tiles[row][col].notEmpty()) {
+								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+							}
+						}
+						break;
+					}
 				}
 				if (printCursor && CursorX == col && CursorY == row && !justmini) {
 					SetConsoleTextAttribute(hConsole, Colors::BlackOnCyan);
@@ -208,6 +248,9 @@ void Board::printBoard(bool printCursor, bool justmini) {
 				}
 				if (Board::Tiles[row][col].notEmpty()) {
 					secondgreen = true;
+				}
+				if (printCursor && Board::AssignedX == col && AssignedY == row && !justmini) {
+					SetConsoleTextAttribute(hConsole, Colors::RedOnGray);
 				}
 
 				Board::Tiles[row][col].printLine(line, justmini, MiniCursorX, secondgreen);
@@ -293,8 +336,25 @@ void Board::printFirstStep() {
 	}
 
 }
+bool Board::hadNeighbour(int x, int y) {
+	for (int i = -1; i <= 1; i++)
+	{
+		for (int j = -1; j <= 1; j++)
+		{
+			if (i != j && abs(i)!=j && abs(j)!=i && y + i >= 0 && y + i < Board::CurrentTileHeight && x + j >= 0 && x + j < Board::CurrentTileWidth) {
+				if ((Board::AssignedX == x + j && Board::AssignedY == y + i)) {
+					return false;
+				}else{
+					if (Board::Tiles[y + i][x + j].notEmpty()) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
 void Board::printSecondStep() {
-	//system("pause");
 	system("cls");
 	Board::printBoard(false, false);
 	if (Board::AllUsedTileNum() >= 2) {
@@ -337,6 +397,7 @@ void Board::Moving(bool ismarking) {
 	while (!quit) {
 		system("cls");
 		Board::printBoard(true, ismarking);
+		std::cout << "Press C to back"<< std::endl;
 		switch (_getch())
 		{
 		case Controls::Up:
@@ -426,37 +487,32 @@ void Board::Moving(bool ismarking) {
 			}
 			break;
 		case Controls::C:
+			Board::AssignedY = -1;
+			Board::AssignedX = -1;
+			Board::Assigning = false;
 			quit = true;
 			break;
 		}
-
 		system("cls");
-		std::cout << "X: " << CursorX << std::endl;
-		std::cout << "Y: " << CursorY << std::endl;
-		std::cout << "mX: " << MiniCursorX << std::endl;
-		std::cout << "mY: " << MiniCursorY << std::endl;
 	}
 }
+std::string Board::getWinnerId() {
+	return Board::WinnerId;
+}
 bool Board::isWin(int x, int y, int minix, int miniy, std::string mark) {
-	int yNum = Board::NeighbourCheckY(x, y, minix, miniy, mark, 1) +Board::NeighbourCheckY(x, y, minix, miniy, mark, -1)-1;
-	int xNum = Board::NeighbourCheckX(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckX(x, y, minix, miniy, mark, -1)-1;
-	int diagNum= Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, -1) - 1;
+	int yNum = Board::NeighbourCheckY(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckY(x, y, minix, miniy, mark, -1) - 1;
+	int xNum = Board::NeighbourCheckX(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckX(x, y, minix, miniy, mark, -1) - 1;
+	int diagNum = Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, -1) - 1;
 	int diagNumInv = Board::NeighbourCheckDiagonalInverse(x, y, minix, miniy, mark, 1) + Board::NeighbourCheckDiagonalInverse(x, y, minix, miniy, mark, -1) - 1;
 
 	if (yNum >= 5 || xNum >= 5 || diagNum >= 5 || diagNumInv >= 5) {
+		Board::WinnerId = mark;
 		return true;
 	}
-
-	//std::cout << "x:" << xNum << " y:" << yNum<<" diag:"<< diagNum<<" diagInv:" << diagNumInv <<std::endl;
-	//system("pause");
-	//std::cout << Board::isWin(CursorX, CursorY, MiniCursorX, MiniCursorY, Board::Players[Board::CurrentPlayerId]->getId(), -1) << std::endl;
 	return false;
 }
 int Board::NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::string mark, int step) {
 	int counter = 0;
-	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
-
-	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
 	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
 		counter += 1;
 		if (minix + step < 0) {
@@ -502,7 +558,6 @@ int Board::NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::strin
 		else {
 			miniy += step;
 		}
-		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
 		counter += Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, step);
 		return counter;
 	}
@@ -512,31 +567,28 @@ int Board::NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::strin
 }
 int Board::NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step) {
 	int counter = 0;
-	std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
-
-	std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
 	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
 		counter += 1;
-		if (minix + step*-1 < 0) {
+		if (minix + step * -1 < 0) {
 			minix = 1;
-			if (x + step*-1 >= 0 && x + step*-1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
-				x += step*-1;
+			if (x + step * -1 >= 0 && x + step * -1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step * -1;
 			}
 			else {
 				return counter;
 			}
 		}
-		else if (minix + step*-1 > 1) {
+		else if (minix + step * -1 > 1) {
 			minix = 0;
-			if (x + step*-1 >= 0 && x + step*-1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
-				x += step*-1;
+			if (x + step * -1 >= 0 && x + step * -1 <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
+				x += step * -1;
 			}
 			else {
 				return counter;
 			}
 		}
 		else {
-			minix += step*-1;
+			minix += step * -1;
 		}
 
 		if (miniy + step < 0) {
@@ -560,7 +612,6 @@ int Board::NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std
 		else {
 			miniy += step;
 		}
-		std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
 		counter += Board::NeighbourCheckDiagonal(x, y, minix, miniy, mark, step);
 		return counter;
 	}
@@ -570,14 +621,11 @@ int Board::NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std
 }
 int Board::NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark, int step) {
 	int counter = 0;
-	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy<<std::endl;
-
-	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
 	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
 		counter += 1;
 		if (minix + step < 0) {
 			minix = 1;
-			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum()>0) {
+			if (x + step >= 0 && x + step <= Board::CurrentTileWidth - 1 && Board::AllUsedTileNum() > 0) {
 				x += step;
 			}
 			else {
@@ -596,7 +644,6 @@ int Board::NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark,
 		else {
 			minix += step;
 		}
-		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
 		counter += Board::NeighbourCheckX(x, y, minix, miniy, mark, step);
 		return counter;
 	}
@@ -606,9 +653,6 @@ int Board::NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark,
 }
 int Board::NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark, int step) {
 	int counter = 0;
-	//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
-
-	//std::cout << Board::Tiles[y][x].getFields(minix, miniy)->getId() << std::endl;
 	if (mark == Board::Tiles[y][x].getFields(minix, miniy)->getId()) {
 		counter += 1;
 		if (miniy + step < 0) {
@@ -632,7 +676,6 @@ int Board::NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark,
 		else {
 			miniy += step;
 		}
-		//std::cout << "X:" << x << " Y:" << y << " mX:" << minix << " mY:" << miniy << std::endl;
 		counter += Board::NeighbourCheckY(x, y, minix, miniy, mark, step);
 		return counter;
 	}
@@ -640,7 +683,42 @@ int Board::NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark,
 		return counter;
 	}
 }
-
+bool Board::doAssign() {
+	Board::Tiles[CursorY][CursorX] = Board::Tiles[Board::AssignedY][Board::AssignedX];
+	Board::Tiles[Board::AssignedY][Board::AssignedX].goNulled();
+	Board::AssignedY = -1;
+	Board::AssignedX = -1;
+	Board::Assigning = false;
+	Board::Sizing();
+	for (int i = 0; i < Tile::FieldSize; i++)
+	{
+		for (int j = 0; j < Tile::FieldSize; j++)
+		{
+			Board::Win = Board::isWin(CursorX, CursorY, i, j, Board::Players[Board::CurrentPlayerId]->getId());
+			if (Board::Win) {
+				return true;
+			}
+		}
+	}
+	int enemy = 0;
+	if (Board::CurrentPlayerId == 0) {
+		enemy = 1;
+	}
+	for (int i = 0; i < Tile::FieldSize; i++)
+	{
+		for (int j = 0; j < Tile::FieldSize; j++)
+		{
+			Board::Win = Board::isWin(CursorX, CursorY, i, j, Board::Players[enemy]->getId());
+			if (Board::Win) {
+				return true;
+			}
+		}
+	}
+	return true;
+}
+Player* Board::getPlayerById(int id) {
+	return Board::Players[id];
+}
 bool Board::Assign() {
 	if (!Assigning) {
 		if (Board::Tiles[CursorY][CursorX].notEmpty()) {
@@ -658,22 +736,46 @@ bool Board::Assign() {
 			switch (Board::Tiles[Board::AssignedY][Board::AssignedX].getNumberOfParachute())
 			{
 			case 1:
-				/*if()*/
+				if (((abs(Board::CursorX - Board::AssignedX) == 1 && abs(Board::CursorY - Board::AssignedY) == 0) ||
+					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) == 1))&&Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					return Board::doAssign();
+				}
+				else {
+					std::cout << "Hiba5";
+					system("pause");
+				}
 				break;
 			case 2:
+				if (((abs(Board::CursorX - Board::AssignedX) > 0 && abs(Board::CursorY - Board::AssignedY) == 0) ||
+					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) > 0)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					return Board::doAssign();
+				}
+				else {
+					std::cout << "Hiba5";
+					system("pause");
+				}
 				break;
 			case 3:
+				if ((abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					return Board::doAssign();
+				}
+				else {
+					std::cout << "Hiba5";
+					system("pause");
+				}
 				break;
 			case 4:
+				if (((abs(Board::CursorX - Board::AssignedX) > 0 && abs(Board::CursorY - Board::AssignedY) == 0) ||
+					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) > 0) ||
+					(abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY))) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					return Board::doAssign();
+				}
+				else {
+					std::cout << "Hiba5";
+					system("pause");
+				}
 				break;
 			}
-			Board::Tiles[CursorY][CursorX] = Board::Tiles[Board::AssignedY][Board::AssignedX];
-			Board::Tiles[Board::AssignedY][Board::AssignedX].goNulled();
-			Board::AssignedY = -1;
-			Board::AssignedX = -1;
-			Board::Assigning = false;
-			Board::Sizing();
-			return true;
 		}
 		else {
 			std::cout << "Hiba2";

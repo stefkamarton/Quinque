@@ -1,7 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
+#include <stdlib.h>
 #include "Player.h"
-
 #include "Tile.h"
 #include "Borders.h"
 #include "Controls.h"
@@ -36,6 +36,7 @@ class Board {
 	int AssignedX;
 	int AssignedY;
 	bool Assigning;
+	bool doAssign();
 
 	int Rounds;
 
@@ -45,8 +46,9 @@ class Board {
 	int NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark, int step);
 	int NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::string mark, int step);
 	int NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step);
-
-	int VerticalCheck(int x, int y, int minix, int miniy);
+	bool isWin(int x, int y, int minix, int miniy, std::string mark);
+	bool Win;
+	std::string WinnerId;
 public:
 	Player* getCurrentPlayer();
 	void NextPlayer();
@@ -62,8 +64,12 @@ public:
 	void Sizing();
 	int AllUsedTileNum();
 	void doSizing(int direction);
-
-	bool isWin(int x, int y, int minix, int miniy, std::string mark);
+	bool getWin();
+	std::string getWinnerId();
+	bool hadNeighbour(int x, int y);
+	Player* getPlayerById(int id);
+	
+	
 
 };
 #endif // !BOARD_H
