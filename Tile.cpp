@@ -12,6 +12,13 @@ Tile::Tile() {
 	}
 
 }
+Tile::~Tile() {
+	for (int i = 0; i < Tile::Fields.size(); i++)
+	{
+		Tile::Fields[i].clear();
+	}
+	Tile::Fields.clear();
+}
 Tile::Tile(const Tile& tile) {
 	Tile::Fields.resize(FieldSize);
 	for (int i = 0; i < Tile::Fields.size(); i++)

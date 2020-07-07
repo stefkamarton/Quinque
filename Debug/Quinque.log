@@ -1,0 +1,10 @@
+﻿  Board.cpp
+  main.cpp
+  Player.cpp
+  Tile.cpp
+C:\Users\Stefka\source\repos\Quinque\Tile.cpp(5,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Stefka\source\repos\Quinque\Tile.cpp(8,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Stefka\source\repos\Quinque\Tile.cpp(17,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Stefka\source\repos\Quinque\Tile.cpp(20,21): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  Quinque.vcxproj -> C:\Users\Stefka\source\repos\Quinque\Debug\Quinque.exe

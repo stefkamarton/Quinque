@@ -27,6 +27,9 @@ Board::Board() {
 	Board::AssignedY = -1;
 	Board::Assigning = false;
 
+	Board::LasTMarkX = -1;
+	Board::LastMarkY = -1;
+
 	Board::Rounds = 1;
 	Board::Win = false;
 
@@ -42,6 +45,20 @@ Board::Board() {
 	}
 
 }
+Board::~Board() {
+	for (int i = 0; i < CurrentTileHeight; i++)
+	{
+		for (int j = 0; j < CurrentTileWidth; j++)
+		{
+			Board::Tiles[i][j].~Tile();
+		}
+		delete[] Board::Tiles[i];
+	}
+	delete[] Board::Tiles;
+
+	Board::Players.clear();
+	delete Board::Instance;
+}
 Player* Board::getCurrentPlayer() {
 	return Board::Players[CurrentPlayerId];
 }
@@ -55,22 +72,65 @@ void Board::NextPlayer() {
 }
 bool Board::AddPoint() {
 	if (Board::Players[Board::CurrentPlayerId]->getRemainingParachute() > 0 && (Board::Tiles[CursorY][CursorX].getFields(MiniCursorX, MiniCursorY)->getId()) == " " &&
-		((CursorY - 1 >= 0 && Board::Tiles[CursorY - 1][CursorX].notEmpty()) ||
-			(CursorX - 1 >= 0 && Board::Tiles[CursorY][CursorX - 1].notEmpty()) ||
-			(CursorY + 1 < Board::CurrentTileHeight - 1 && Board::Tiles[CursorY + 1][CursorX].notEmpty()) ||
-			(CursorX + 1 < Board::CurrentTileWidth - 1 && Board::Tiles[CursorY][CursorX + 1].notEmpty()) ||
-			Board::Tiles[CursorY][CursorX].notEmpty()) || Board::AllUsedTileNum() == 0) {
+		(Board::hadNeighbour(CursorX,CursorY)>0 || Board::AllUsedTileNum() < 2)) {
 		Board::Tiles[CursorY][CursorX].setFields(Board::Players[Board::CurrentPlayerId], MiniCursorX, MiniCursorY);
+		Board::LasTMarkX = CursorX;
+		Board::LastMarkY = CursorY;
 		Board::Win = Board::isWin(CursorX, CursorY, MiniCursorX, MiniCursorY, Board::Players[Board::CurrentPlayerId]->getId());
 		system("pause");
 		Board::Sizing();
 		return true;
 	}
 	else {
-		std::cout << "Hiba0";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+		std::cout << "You can't allow to mark! Choose a green field!"<<std::endl;					
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 		system("pause");
 	}
 	return false;
+}
+int Board::isConnectedCounter(int x, int y, bool main=false) {
+	if (main) {
+		Board::Connections = new bool* [Board::CurrentTileHeight];
+		for (int i = 0; i < Board::CurrentTileHeight; i++)
+		{
+			Board::Connections[i] = new bool[Board::CurrentTileWidth];
+			for (int j = 0; j < Board::CurrentTileWidth; j++)
+			{
+				Board::Connections[i][j] = false;
+				std::cout << "?";
+			}
+		}
+	}
+	int counter = 1;
+	Board::Connections[y][x] = true;
+	//Connections[y][x] = true;
+	/*std::cout << "X:" << x << std::endl;
+	std::cout << "Y:" << y << std::endl;
+	std::cout << "sad" << Board::Tiles[y][x + 1].notEmpty() << std::endl;
+	system("pause");*/
+
+	if (x+1 < Board::CurrentTileWidth && Board::Tiles[y][x+1].notEmpty() && Connections[y][x + 1] == false) {
+		counter += isConnectedCounter(x + 1,y);
+	}
+	if (x - 1 >= 0 && Board::Tiles[y][x - 1].notEmpty() && Connections[y][x-1]==false) {
+		counter += isConnectedCounter(x - 1, y);
+	}
+	if (y + 1 < Board::CurrentTileHeight && Board::Tiles[y+1][x].notEmpty() && Connections[y+1][x] == false) {
+		counter += isConnectedCounter(x, y+1);
+	}
+	if (y - 1 >= 0 && Board::Tiles[y-1][x].notEmpty() && Connections[y-1][x] == false) {
+		counter += isConnectedCounter(x, y-1);
+	}
+
+	if (main) {
+		for (int i = 0; i < CurrentTileHeight; i++)
+		{
+			delete[] Board::Connections[i];
+		}
+		delete[] Board::Connections;
+	}
+	return counter;
 }
 bool Board::getWin() {
 	return Board::Win;
@@ -162,6 +222,8 @@ void Board::NextStep() {
 	if (Board::CurrentStepNum == 1) {
 		Board::CurrentStepNum = 0;
 		Board::NextPlayer();
+		Board::LasTMarkX=-1;
+		Board::LastMarkY=-1;
 		Board::Rounds += 1;
 	}
 	else {
@@ -198,7 +260,7 @@ void Board::printBoard(bool printCursor, bool justmini) {
 					col - 1 >= 0 && Board::Tiles[row][col - 1].notEmpty() ||
 					col + 1 < Board::CurrentTileWidth && Board::Tiles[row][col + 1].notEmpty() || Board::Tiles[row][col].notEmpty()) {
 					secondgreen = true;
-					if (Board::AssignedX == -1 && Board::AssignedY == -1) {
+					if (Board::AssignedX == -1 && Board::AssignedY == -1 && printCursor &&justmini) {
 						SetConsoleTextAttribute(hConsole, Colors::BlackOnGreen);
 					}
 				}
@@ -207,7 +269,7 @@ void Board::printBoard(bool printCursor, bool justmini) {
 					{
 					case 1:
 						if (((abs(col - Board::AssignedX) == 1 && abs(row - Board::AssignedY) == 0) ||
-							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) == 1)) && Board::hadNeighbour(col,row)) {
+							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) == 1)) && Board::hadNeighbour(col,row)>0) {
 							if (!Board::Tiles[row][col].notEmpty()) {
 								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
 							}
@@ -215,14 +277,14 @@ void Board::printBoard(bool printCursor, bool justmini) {
 						break;
 					case 2:
 						if (((abs(col - Board::AssignedX) > 0 && abs(row - Board::AssignedY) == 0) ||
-							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) > 0)) && Board::hadNeighbour(col, row)) {
+							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) > 0)) && Board::hadNeighbour(col, row)>0) {
 							if (!Board::Tiles[row][col].notEmpty()) {
 								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
 							}
 						}
 						break;
 					case 3:
-						if ((abs(col - Board::AssignedX) == abs(row - Board::AssignedY)) && Board::hadNeighbour(col, row)) {
+						if ((abs(col - Board::AssignedX) == abs(row - Board::AssignedY)) && Board::hadNeighbour(col, row)>0) {
 							if (!Board::Tiles[row][col].notEmpty()) {
 								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
 							}
@@ -232,7 +294,7 @@ void Board::printBoard(bool printCursor, bool justmini) {
 					case 4:
 						if (((abs(col - Board::AssignedX) > 0 && abs(row - Board::AssignedY) == 0) ||
 							(abs(col - Board::AssignedX) == 0 && abs(row - Board::AssignedY) > 0) ||
-							(abs(col - Board::AssignedX) == abs(row - Board::AssignedY))) && Board::hadNeighbour(col, row)) {
+							(abs(col - Board::AssignedX) == abs(row - Board::AssignedY))) && Board::hadNeighbour(col, row)>0) {
 							if (!Board::Tiles[row][col].notEmpty()) {
 								SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
 							}
@@ -309,15 +371,36 @@ void Board::printBoard(bool printCursor, bool justmini) {
 
 		}
 	}
-	std::cout << "Current player is " << Board::Players[Board::CurrentPlayerId]->getId() << std::endl;
-	std::cout << "Remaining parachutes is " << Board::Players[Board::CurrentPlayerId]->getRemainingParachute() << std::endl;
+	std::cout << "Current player is ";
+	if (Board::CurrentPlayerId == 1) {
+		SetConsoleTextAttribute(hConsole, Colors::BlueOnBlack);
+	}
+	else {
+		SetConsoleTextAttribute(hConsole, Colors::RedOnBlack);
+	}
+	std::cout << Board::Players[Board::CurrentPlayerId]->getId() << std::endl;
+	SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+	std::cout << "Remaining parachutes is ";
+	SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+	std::cout << Board::Players[Board::CurrentPlayerId]->getRemainingParachute() << std::endl;
+	SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+	std::cout << "---" << std::endl;
 }
 void Board::printFirstStep() {
 	system("cls");
 	Board::printBoard(false, false);
-	std::cout << "Press M to marking a skydiver" << std::endl;
+	std::cout << "Press ";
+	SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+	std::cout << "M";
+	SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+	std::cout<<" to marking a skydiver" << std::endl;
+
 	if (Board::AllUsedTileNum() >= 2) {
-		std::cout << "Press N to moving a tile" << std::endl;
+		std::cout << "Press ";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+		std::cout << "N";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+		std::cout <<" to moving a tile" << std::endl;
 	}
 	switch (_getch())
 	{
@@ -336,35 +419,42 @@ void Board::printFirstStep() {
 	}
 
 }
-bool Board::hadNeighbour(int x, int y) {
+int Board::hadNeighbour(int x, int y) {
+	int counter = 0;
 	for (int i = -1; i <= 1; i++)
 	{
 		for (int j = -1; j <= 1; j++)
 		{
 			if (i != j && abs(i)!=j && abs(j)!=i && y + i >= 0 && y + i < Board::CurrentTileHeight && x + j >= 0 && x + j < Board::CurrentTileWidth) {
 				if ((Board::AssignedX == x + j && Board::AssignedY == y + i)) {
-					return false;
+					/*return false;*/
 				}else{
 					if (Board::Tiles[y + i][x + j].notEmpty()) {
-						return true;
+						counter++;
 					}
 				}
 			}
 		}
 	}
-	return false;
+	return counter;
 }
 void Board::printSecondStep() {
 	system("cls");
 	Board::printBoard(false, false);
 	if (Board::AllUsedTileNum() >= 2) {
-		std::cout << "Press N to moving a tile" << std::endl;
-		std::cout << "Press S to skip this step" << std::endl;
+		std::cout << "Press ";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+		std::cout << "N";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+		std::cout << " to moving a tile" << std::endl;
+		std::cout << "Press ";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+		std::cout << "S";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+		std::cout << " to skip this step" << std::endl;
 		switch (_getch())
 		{
 		case Controls::S:
-			//Board::printBoard(true, true);
-			//Board::Moving(true);
 			Board::NextStep();
 			break;
 		case Controls::N:
@@ -397,7 +487,11 @@ void Board::Moving(bool ismarking) {
 	while (!quit) {
 		system("cls");
 		Board::printBoard(true, ismarking);
-		std::cout << "Press C to back"<< std::endl;
+		std::cout << "Press ";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnPurple);
+		std::cout << "C";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+		std::cout << " to back" << std::endl;
 		switch (_getch())
 		{
 		case Controls::Up:
@@ -684,12 +778,29 @@ int Board::NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark,
 	}
 }
 bool Board::doAssign() {
+
 	Board::Tiles[CursorY][CursorX] = Board::Tiles[Board::AssignedY][Board::AssignedX];
 	Board::Tiles[Board::AssignedY][Board::AssignedX].goNulled();
-	Board::AssignedY = -1;
-	Board::AssignedX = -1;
-	Board::Assigning = false;
-	Board::Sizing();
+
+	//std::cout << "Kapcsolodó:" << isConnectedCounter(CursorX, CursorY, true) << std::endl;
+	if (Board::AllUsedTileNum() == isConnectedCounter(CursorX, CursorY, true)) {
+		Board::AssignedY = -1;
+		Board::AssignedX = -1;
+		Board::Assigning = false;
+		Board::Sizing();
+	}
+	else {
+		Board::Tiles[Board::AssignedY][Board::AssignedX] = Board::Tiles[CursorY][CursorX];
+		Board::Tiles[CursorY][CursorX].goNulled();
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+		std::cout << "All tiles need to be connect to all these" << std::endl;
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+		system("pause");
+		return false;
+	}
+
+
+	system("pause");
 	for (int i = 0; i < Tile::FieldSize; i++)
 	{
 		for (int j = 0; j < Tile::FieldSize; j++)
@@ -721,13 +832,29 @@ Player* Board::getPlayerById(int id) {
 }
 bool Board::Assign() {
 	if (!Assigning) {
-		if (Board::Tiles[CursorY][CursorX].notEmpty()) {
-			AssignedX = CursorX;
-			AssignedY = CursorY;
-			Assigning = true;
+		if (Board::Tiles[CursorY][CursorX].notEmpty() && hadNeighbour(CursorX,CursorY)!=4) {
+			if (LasTMarkX != CursorX && LastMarkY != CursorY) {
+				AssignedX = CursorX;
+				AssignedY = CursorY;
+				Assigning = true;
+			}
+			else {
+				SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+				std::cout << "You can't allow to move!" << std::endl;
+				SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+				system("pause");
+			}
+		}
+		else if (hadNeighbour(CursorX, CursorY) == 4) {
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+			std::cout << "You can't allow to move!" << std::endl;
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+			system("pause");
 		}
 		else {
-			std::cout << "Hiba1";
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+			std::cout << "You can't allow to select it, because this tile is empty!"<<std::endl;
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 			system("pause");
 		}
 	}
@@ -737,48 +864,58 @@ bool Board::Assign() {
 			{
 			case 1:
 				if (((abs(Board::CursorX - Board::AssignedX) == 1 && abs(Board::CursorY - Board::AssignedY) == 0) ||
-					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) == 1))&&Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) == 1)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)>0) {
 					return Board::doAssign();
 				}
 				else {
-					std::cout << "Hiba5";
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+					std::cout << "You can't allow to move selected tile here! Choose a gold field!" << std::endl;
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 					system("pause");
 				}
 				break;
 			case 2:
 				if (((abs(Board::CursorX - Board::AssignedX) > 0 && abs(Board::CursorY - Board::AssignedY) == 0) ||
-					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) > 0)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) > 0)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)>0) {
 					return Board::doAssign();
 				}
 				else {
-					std::cout << "Hiba5";
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+					std::cout << "You can't allow to move selected tile here! Choose a gold field!" << std::endl;
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 					system("pause");
 				}
 				break;
 			case 3:
-				if ((abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+				if ((abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY)) && Board::hadNeighbour(Board::CursorX, Board::CursorY)>0) {
 					return Board::doAssign();
 				}
 				else {
-					std::cout << "Hiba5";
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+					std::cout << "You can't allow to move selected tile here! Choose a gold field!" << std::endl;
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 					system("pause");
 				}
 				break;
 			case 4:
 				if (((abs(Board::CursorX - Board::AssignedX) > 0 && abs(Board::CursorY - Board::AssignedY) == 0) ||
 					(abs(Board::CursorX - Board::AssignedX) == 0 && abs(Board::CursorY - Board::AssignedY) > 0) ||
-					(abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY))) && Board::hadNeighbour(Board::CursorX, Board::CursorY)) {
+					(abs(Board::CursorX - Board::AssignedX) == abs(Board::CursorY - Board::AssignedY))) && Board::hadNeighbour(Board::CursorX, Board::CursorY)>0) {
 					return Board::doAssign();
 				}
 				else {
-					std::cout << "Hiba5";
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+					std::cout << "You can't allow to move selected tile here! Choose a gold field!" << std::endl;
+					SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 					system("pause");
 				}
 				break;
 			}
 		}
 		else {
-			std::cout << "Hiba2";
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+			std::cout << "You can't allow to move selected tile here beacuse this tile is not empty! Choose an empty gold field!" << std::endl;
+			SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
 			system("pause");
 		}
 	}

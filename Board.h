@@ -38,35 +38,44 @@ class Board {
 	bool Assigning;
 	bool doAssign();
 
+	int LasTMarkX;
+	int LastMarkY;
+
 	int Rounds;
 
 	Tile** Tiles;
+	bool** Connections;
 	Board();
+	~Board();
+	void NextPlayer();
+	void NextStep();
+	bool AddPoint();
+	void Moving(bool mini = false);
+
+	bool Assign();
+	void Sizing();
+	int AllUsedTileNum();
+	void doSizing(int direction);
+
 	int NeighbourCheckX(int x, int y, int minix, int miniy, std::string mark, int step);
 	int NeighbourCheckY(int x, int y, int minix, int miniy, std::string mark, int step);
 	int NeighbourCheckDiagonal(int x, int y, int minix, int miniy, std::string mark, int step);
 	int NeighbourCheckDiagonalInverse(int x, int y, int minix, int miniy, std::string mark, int step);
 	bool isWin(int x, int y, int minix, int miniy, std::string mark);
+	int isConnectedCounter(int x, int y, bool main);
 	bool Win;
 	std::string WinnerId;
 public:
 	Player* getCurrentPlayer();
-	void NextPlayer();
-	void NextStep();
-	bool AddPoint();
-	void Moving(bool mini=false);
+
 	static Board* getInstance();
 	void printBoard(bool printCursor = false, bool mini=false);
 	void printSecondStep();
 	void printFirstStep();
 	int getCurrentStep();
-	bool Assign();
-	void Sizing();
-	int AllUsedTileNum();
-	void doSizing(int direction);
 	bool getWin();
 	std::string getWinnerId();
-	bool hadNeighbour(int x, int y);
+	int hadNeighbour(int x, int y);
 	Player* getPlayerById(int id);
 	
 	

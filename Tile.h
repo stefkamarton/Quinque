@@ -13,6 +13,7 @@ class Tile {
 public:
 	static const int FieldSize = 2;
 	Tile();
+	~Tile();
 	Tile(const Tile& tile);
 	void printLine(int linenum, bool justmini=false, int minicursor = 0, bool secondgreen=false);
 	void setFields(Player* cPlayer, int x, int y);

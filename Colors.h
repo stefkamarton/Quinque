@@ -15,6 +15,8 @@ enum Colors {
 	RedOnGold=100,
 	BlueOnGold=97,
 	BlueOnGray=129,
-	RedOnGray= 132
+	RedOnGray= 132,
+	WhiteOnPurple=95,
+	WhiteOnRed=79
 };
 #endif // !COLORS_H

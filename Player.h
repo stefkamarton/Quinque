@@ -5,8 +5,9 @@
 class Player {
 	std::string Id = "";
 	int ParachutesNum = 0;
-	const int MAX_PARACHUTE = 15;
+	const int MAX_PARACHUTE = 18;
 public:
+	~Player();
 	bool AddParachute();
 	Player(int null);
 	Player(std::string id);

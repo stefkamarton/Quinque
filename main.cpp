@@ -7,15 +7,10 @@
 
 int main()
 {
-
 	Board* board = Board::getInstance();
-	/*std::cout << "Enter a character";
-	std::cout << _getch();*/
 	bool win = false;
 	bool end = false;
 	while (!win && !end) {
-		/*std::cout <<"Current step:" <<board->getCurrentStep()<<std::endl;
-		std::cout << "Current player:" << board->getCurrentPlayer()->getId() << std::endl;*/
 		switch (board->getCurrentStep())
 		{
 		case 0:
@@ -30,14 +25,23 @@ int main()
 		if (board->getPlayerById(0)->getRemainingParachute() == 0 && board->getPlayerById(1)->getRemainingParachute() == 0) {
 			end = true;
 		}
-		
-		//win = true;
 	}
-	std::cout <<board->getWinnerId();
-	for (int i = 0; i < 255; i++)
-	{
-		SetConsoleTextAttribute(hConsole, i);
-		std::cout << i << std::endl;
-	}
+	if (win == true) {
 
+		if (board->getWinnerId() == "X") {
+			SetConsoleTextAttribute(hConsole, Colors::RedOnGold);
+		}
+		else {
+			SetConsoleTextAttribute(hConsole, Colors::BlueOnGold);
+		}
+		std::cout << "Winner is: ";
+		std::cout << board->getWinnerId() << std::endl;
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+
+	}
+	else if (end == true) {
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnRed);
+		std::cout << "GAME OVER";
+		SetConsoleTextAttribute(hConsole, Colors::WhiteOnBlack);
+	}
 }

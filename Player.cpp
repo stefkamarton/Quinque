@@ -4,6 +4,7 @@ Player::Player(int null) :Id(" ") {};
 std::string Player::getId() {
 	return Player::Id;
 }
+Player::~Player() {}
 int Player::getParachute() {
 	return Player::ParachutesNum;
 }
